@@ -1,8 +1,8 @@
-from rest_framework import permissions
-from rest_framework import views
-from rest_framework import status
+from rest_framework import permissions, views, status,viewsets
 from rest_framework.response import Response
 from django.contrib.auth import login
+from authentication.models import Product
+from authentication.serializers import ProductSerializer
 
 from . import serializers
 
@@ -17,3 +17,7 @@ class LoginView(views.APIView):
         user = serializer.validated_data['user']
         login(request, user)
         return Response({"str": "success"}, status=status.HTTP_202_ACCEPTED)
+
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer

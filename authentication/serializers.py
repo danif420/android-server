@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
-
 from rest_framework import serializers
+from authentication.models import Product
 
 class LoginSerializer(serializers.Serializer):
     """
@@ -41,3 +41,8 @@ class LoginSerializer(serializers.Serializer):
         # It will be used in the view.
         attrs['user'] = user
         return attrs
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'img']

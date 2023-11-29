@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,10 @@ SECRET_KEY = 'django-insecure-qbpx6o!at)32&#xhjt(@w6n0xl10k^20hw_t114aej&#chlj&9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+STATICFILES_DIRS = (
+	os.path.join(BASE_DIR, 'media'),
+)
 
 
 # Application definition
@@ -37,9 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "authentication.apps.AuthenticationConfig",
-    "rest_framework",
-    "django.contrib.sites",
+    'authentication.apps.AuthenticationConfig',
+    'rest_framework',
+    'django.contrib.sites',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.sites.middleware.CurrentSiteMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -83,6 +88,8 @@ DATABASES = {
     }
 }
 
+
+SITE_ID = 1
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -135,5 +142,3 @@ REST_FRAMEWORK = {
 }
 
 ALLOWED_HOSTS = ['*']
-
-APPEND_SLASH=False
