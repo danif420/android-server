@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from django.contrib.auth import login
 from authentication.models import Product
 from authentication.serializers import ProductSerializer
-
+from django.http import JsonResponse
 from . import serializers
 
 class LoginView(views.APIView):
@@ -19,5 +19,14 @@ class LoginView(views.APIView):
         return Response({"str": "success"}, status=status.HTTP_202_ACCEPTED)
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.AllowAny,)
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    def list(self, request, *args, **kwargs):
+        # Call the original list method to get the serialized data
+        response_data = super().list(request, *args, **kwargs)
+
+        # Wrap the serialized data in a dictionary with a key ('products' in this case)
+        response_data = {'products': response_data.data}
+
+        return JsonResponse(response_data)
