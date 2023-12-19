@@ -1,4 +1,4 @@
-from rest_framework import permissions, views, status,viewsets
+from rest_framework import permissions, views, status,viewsets,generics
 from rest_framework.response import Response
 from django.contrib.auth import login
 from authentication.models import Product
@@ -30,3 +30,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         response_data = {'products': response_data.data}
 
         return JsonResponse(response_data)
+
+    def get_queryset(self):
+        query = self.request.query_params.get('search', '')
+        return Product.objects.filter(name__icontains=query)
