@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from django.contrib.auth import login
 from authentication.models import Product
 from authentication.serializers import ProductSerializer
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import get_object_or_404
 from . import serializers
 
 class LoginView(views.APIView):
@@ -34,3 +35,14 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         query = self.request.query_params.get('search', '')
         return Product.objects.filter(name__icontains=query)
+
+def get_3d_model(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+
+    # Assuming the 3D models are stored in the 'models' directory within MEDIA_ROOT
+    model_path = product.model_3d.path
+
+    with open(model_path, 'rb') as model_file:
+        response = HttpResponse(model_file.read(), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{product.name}.obj"'  # Adjust the filename and content type as needed
+        return response
