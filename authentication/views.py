@@ -42,7 +42,6 @@ def get_3d_model(request, product_id):
     # Assuming the 3D models are stored in the 'models' directory within MEDIA_ROOT
     model_path = product.model_3d.path
 
-    with open(model_path, 'rb') as model_file:
-        response = HttpResponse(model_file.read(), content_type='application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{product.name}.obj"'  # Adjust the filename and content type as needed
-        return response
+    model_uri = request.build_absolute_uri(model_path)
+
+    return JsonResponse({'modeluri': model_uri})
