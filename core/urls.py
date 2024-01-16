@@ -2,12 +2,16 @@ from django.contrib import admin
 from django.urls import path, include
 from authentication import views
 from django.conf import settings
+from rest_framework.authtoken.views import obtain_auth_token
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', views.LoginView.as_view()),
+    path('login/', obtain_auth_token),
     path('logout/', views.LogoutView.as_view()),
+    path('signup/', views.UserCreateView.as_view()),
+    path('get_user_id/<str:username>/', views.GetUserIdView.as_view()),
+    path('delete_user/<int:pk>/', views.UserDeleteView.as_view()),
     path('api/', include('authentication.urls')),
 ]
 

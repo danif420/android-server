@@ -4,10 +4,13 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from authentication.models import Product
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import TokenAuthentication
 from authentication.serializers import ProductSerializer,ProductCreateSerializer,UserSerializer
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from . import serializers
 
 class LoginView(views.APIView):
@@ -24,11 +27,9 @@ class LoginView(views.APIView):
 
 class LogoutView(views.APIView):
     def post(self, request, *args, **kwargs):
+        # Log the user out
+        print("Request user:", request.user)
         logout(request)
-        del request.session['username':username]
-        del request.session['password':password]
-        del request.delete_cookie['username': username]
-        del request.delete_cookie['password':password]
         return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 class UserCreateView(generics.CreateAPIView):
@@ -36,14 +37,21 @@ class UserCreateView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = (permissions.AllowAny,)
 
-class UserDeleteView(generics.DestroyAPIView):
-    queryset = User.objects.all()
-    permission_classes = [IsAuthenticated]
+class GetUserIdView(views.APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            return Response({"id": user.id}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    def destroy(self, request, *args, **kwargs):
-        user = self.get_object()
+class UserDeleteView(views.APIView):
+    permission_classes = [AllowAny]
+    def delete(self, request, pk):
+        user = User.objects.get(pk=pk)
         user.delete()
-        return Response({"detail": "User deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({"detail": "User deleted successfully."})
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
@@ -62,6 +70,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = ProductCreateSerializer(data=request.data)
         if serializer.is_valid():
+            username = request.data.get('user', None)
+            if username:
+                user = get_object_or_404(User, username=username)
+                serializer.validated_data['user'] = user
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
