@@ -11,6 +11,7 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view()),
     path('signup/', views.UserCreateView.as_view()),
     path('get_user_id/<str:username>/', views.GetUserIdView.as_view()),
+    path('get_user/<int:id>/', views.get_user),
     path('delete_user/<int:pk>/', views.UserDeleteView.as_view()),
     path('api/', include('authentication.urls')),
 ]

@@ -6,7 +6,7 @@ from authentication.models import Product
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import TokenAuthentication
-from authentication.serializers import ProductSerializer,ProductCreateSerializer,UserSerializer
+from authentication.serializers import ProductSerializer,ProductCreateSerializer,UserSerializer, ProductEditSerializer
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -70,9 +70,9 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = ProductCreateSerializer(data=request.data)
         if serializer.is_valid():
-            username = request.data.get('user', None)
-            if username:
-                user = get_object_or_404(User, username=username)
+            user = request.data.get('user', None)
+            if user:
+                user = get_object_or_404(User, id=id)
                 serializer.validated_data['user'] = user
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -81,6 +81,42 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         query = self.request.query_params.get('search', '')
         return Product.objects.filter(name__icontains=query)
+
+class ProductByUserIdViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.AllowAny,)
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def list(self, request, *args, **kwargs):
+        # Call the original list method to get the serialized data
+        response_data = super().list(request, *args, **kwargs)
+
+        # Wrap the serialized data in a dictionary with a key ('products' in this case)
+        response_data = {'products': response_data.data}
+
+        return JsonResponse(response_data)
+
+    def get_queryset(self):
+        query = self.request.query_params.get('user', '')
+        user = get_object_or_404(User, id=query)
+        return Product.objects.filter(user=user)
+
+class ProductEditView(views.APIView):
+    permission_classes = [AllowAny]
+    def put(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        serializer = ProductEditSerializer(product, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProductDeleteView(views.APIView):
+    permission_classes = [AllowAny]
+    def delete(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -110,3 +146,10 @@ def get_3d_model(request, product_id):
     model_path = product.model_3d.path
     model_uri = request.build_absolute_uri(model_path)
     return JsonResponse({'modeluri': model_uri})
+
+def get_user(request, id):
+    user = get_object_or_404(User, id=id)
+    user_data = {
+        'username': user.username,
+    }
+    return JsonResponse(user_data)

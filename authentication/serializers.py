@@ -64,3 +64,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'quantity', 'img', 'model_3d', 'user']
+
+class ProductEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['name', 'price', 'quantity']
